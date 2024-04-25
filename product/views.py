@@ -40,11 +40,11 @@ class Manageproduct(APIView):
             serializer.save()
         return Response({"message":"The details are updated."}, status=status.HTTP_202_ACCEPTED)
     
-            
+    @is_seller       
     def delete(self,request,id):
         user = request.user
         try:
-            product = Product.objects.get(user_id=request.user.id, id=id)
+            product = Product.objects.get(user=user, id=id)
         except Product.DoesNotExist:
             return Response({"error":"The prroduct you are giving input is not added by you. You cannot delete it."})
         product.delete()
