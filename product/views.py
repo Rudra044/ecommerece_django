@@ -34,7 +34,8 @@ class Manageproduct(APIView):
         try:
             product = Product.objects.get(user_id=request.user.id, id=id)
         except Product.DoesNotExist:
-            return Response({"error":"The product you are giving input is not added by you. You cannot update its detail."})
+            return Response({"error":"The product you are giving input is not added by you. You cannot update its detail."},
+                            status=status.HTTP_400_BAD_REQUEST)
         serializer = Productserializer(product, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -46,9 +47,10 @@ class Manageproduct(APIView):
         try:
             product = Product.objects.get(user=user, id=id)
         except Product.DoesNotExist:
-            return Response({"error":"The prroduct you are giving input is not added by you. You cannot delete it."})
+            return Response({"error":"The prroduct you are giving input is not added by you. You cannot delete it."},
+                            status=status.HTTP_400_BAD_REQUEST)
         product.delete()
-        return Response({"message":"The product is deleted."})
+        return Response({"message":"The product is deleted."}, status=status.HTTP_200_OK)
     
 
 class Readproduct(APIView):
@@ -57,13 +59,14 @@ class Readproduct(APIView):
             try:
                 product = Product.objects.get(id=id)
                 serializer = Productserializer(product)
-                return Response(serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             except Product.DoesNotExist:
-                return Response({"error":"Id provided by u does not exist."})
+                return Response({"error":"Id provided by u does not exist."},
+                                status=status.HTTP_400_BAD_REQUEST)
         else:
             product = Product.objects.all()
             serializer = Productserializer(product, many=True)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
                 
 
         

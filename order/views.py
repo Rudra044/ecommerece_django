@@ -20,9 +20,9 @@ class Createorder(APIView):
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
-            return Response({"error":"invalid product_id"})
+            return Response({"error":"invalid product_id"}, status=status.HTTP_400_BAD_REQUEST)
         if product.inventory < quantity:
-            return Response({"message":f"You can maximum order {product.inventory}"})
+            return Response({"message":f"You can maximum order {product.inventory}"}, status=status.HTTP_200_OK)
         order = Order.objects.create(user=user, product=product)
         order.quantity = quantity
         order.save()
@@ -31,7 +31,8 @@ class Createorder(APIView):
         amount = product.price*quantity
         return Response(
             {"message":
-             f"Your order has been created items-{order.quantity}, status-{order.status}, inventory_left-{product.inventory}, amount-{amount}"})
+             f"Your order has been created items-{order.quantity}, status-{order.status}, inventory_left-{product.inventory}, amount-{amount}"}, 
+             status=status.HTTP_201_CREATED)
     
 class Manageorder(APIView):
     permission_classes = [IsAuthenticated]
@@ -40,12 +41,13 @@ class Manageorder(APIView):
         try:
             items = Order.objects.get(user_id=user.id, id=id)
         except Order.DoesNotExist:
-            return Response({"error":"Order you want to delete is not added by you."})
+            return Response({"error":"Order you want to delete is not added by you."}, 
+                            status=status.HTTP_400_BAD_REQUEST)
         product = items.product
         product.inventory = product.inventory+items.quantity
         product.save()
         items.delete()
-        return Response({"message":"Order deleted"})
+        return Response({"message":"Order deleted"}, status=status.HTTP_200_OK)
     
     @is_seller
     def patch(self, request, id):
@@ -73,11 +75,11 @@ class Manageorder(APIView):
                 serializer = Orderserializer(order)
                 return Response(serializer.data)
             except Product.DoesNotExist:
-                return Response({"error":"Id provided by u does not exist."})
+                return Response({"error":"Id provided by u does not exist."}, status=status.HTTP_404_NOT_FOUND)
         else:
             order = Order.objects.filter(user=user)
             serializer = Orderserializer(order, many=True)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class Orderseller(APIView):
@@ -91,13 +93,14 @@ class Orderseller(APIView):
                 user1 = product.user
                 if user1 == user:
                     serializer = Orderserializer(order)
-                    return Response(serializer.data)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
             except Product.DoesNotExist:
-                return Response({"error":"Id provided by u does not exist."})
+                return Response({"error":"Id provided by u does not exist."},
+                                status=status.HTTP_400_BAD_REQUEST)
         else:
             order = Order.objects.filter(product__user=user)
             serializer = Orderserializer(order, many=True)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 

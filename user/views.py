@@ -1,5 +1,5 @@
 import os, secrets
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -23,7 +23,7 @@ class Register(APIView):
         if serializer.is_valid():
             serializer.save(password=make_password(request.data['password']))
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 class Login(APIView):
@@ -32,13 +32,13 @@ class Login(APIView):
         password = request.data.get("password")
         user = User.objects.get(username=username)
         if not user:
-            return Response("User does not exist")
+            return Response("User does not exist", status=status.HTTP_404_NOT_FOUND)
         if user and check_password(password, user.password):
             refresh = RefreshToken.for_user(user)
             token = str(refresh.access_token)
             return Response({'message':'Login successful','token':token},status=status.HTTP_202_ACCEPTED)
         else:
-            return Response("wrong password")
+            return Response("wrong password", status=status.HTTP_400_BAD_REQUEST)
         
 
 class LogoutView(APIView):
@@ -58,7 +58,7 @@ class Manageprofile(APIView):
         if serializer.is_valid():
             serializer.save() 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request):
         user = request.user
@@ -127,14 +127,16 @@ class Resetpassword(APIView):
         if user1.isUsed == 0:
             return Response({'error':'You already have used the token'}, status=status.HTTP_400_BAD_REQUEST)
         if not new_password and confirm_new_password:
-            return Response({'error':'Please provide the fields new_password and confirm_new_password'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error':'Please provide the fields new_password and confirm_new_password'},
+                             status=status.HTTP_400_BAD_REQUEST)
         if timezone.now() > user1.expired_time:
             print(timezone.now())
             return Response({'error':'The token has exxpired'}, status=status.HTTP_400_BAD_REQUEST)
         if token != user1.token:
             return Response({'error':'Wrong token provided'})
         if new_password != confirm_new_password:
-            return Response({'error':'Your new_password and confirm_new_password do not match.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error':'Your new_password and confirm_new_password do not match.'},
+                             status=status.HTTP_400_BAD_REQUEST)
         if token == user1.token and timezone.now() < user1.expired_time:
             print(timezone.now())
             user.password = make_password(new_password)
