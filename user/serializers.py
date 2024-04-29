@@ -5,13 +5,13 @@ from .models import User
 class Userserializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["role","email", "username", "password"]
+        fields = ["role", "email", "username", "password"]
 
 
 class Profileserializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["first_name","last_name", "phone_number", "phone_number", "address"]
+        fields = ["first_name", "last_name", "phone_number", "phone_number", "address"]
 
 
 class ChangePasswordSerializer(serializers.Serializer):

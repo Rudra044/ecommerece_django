@@ -1,16 +1,15 @@
 from django.db import models
 from user.models import User
-from cart.models import Cart
 from product.models import Product
 
-# Create your models here.
+
 class Order(models.Model):
     PENDING = 'PENDING'
     IN_PROGRESS = 'IN_PROGRESS'
     COMPLETED = 'COMPLETED'
     STATUS = (
         (PENDING, 'PENDING'),
-        (IN_PROGRESS,'IN_PROGRESS'),
+        (IN_PROGRESS, 'IN_PROGRESS'),
         (COMPLETED, 'COMPLETED'),
     )
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product')
