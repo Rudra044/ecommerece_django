@@ -13,6 +13,7 @@ from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import get_object_or_404
 
 from .models import User, Link
 from .serializers import Userserializer, ChangePasswordSerializer, Profileserializer
@@ -31,7 +32,7 @@ class Login(APIView):
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
-        user = User.objects.get(username=username)
+        user = get_object_or_404(User, username=username)
         if not user:
             return Response("User does not exist", status=status.HTTP_404_NOT_FOUND)
         if user and check_password(password, user.password):
@@ -73,7 +74,7 @@ class Manageprofile(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ChangePasswordView(APIView):
+class ChangePassword(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request):
@@ -116,6 +117,7 @@ class Forgetpassword(APIView):
         user1.expired_time=expires
         user1.save()
         return Response('Mail has been sent to your registered mail id', status=status.HTTP_200_OK)
+
 
 class Resetpassword(APIView):
     def post(self, request, Reset_link):

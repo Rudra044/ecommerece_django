@@ -22,6 +22,8 @@ class Createorder(APIView):
             return Response({"error": "invalid product_id"}, status=status.HTTP_400_BAD_REQUEST)
         if product.inventory < quantity:
             return Response({"message": f"You can maximum order {product.inventory}"}, status=status.HTTP_200_OK)
+        if user.address is None:
+            return Response({"message": "Please add your address before order"})
         order = Order.objects.create(user=user, product=product)
         order.quantity = quantity
         order.save()
@@ -75,7 +77,7 @@ class Manageorder(APIView):
                 serializer = Orderserializer(order)
                 return Response(serializer.data)
             except Product.DoesNotExist:
-                return Response({"error": "Id provided by u does not exist."}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"error": "Id provided by you does not exist."}, status=status.HTTP_404_NOT_FOUND)
         else:
             order = Order.objects.filter(user=user)
             serializer = Orderserializer(order, many=True)
@@ -95,7 +97,7 @@ class Orderseller(APIView):
                     serializer = Orderserializer(order)
                     return Response(serializer.data, status=status.HTTP_200_OK)
             except Product.DoesNotExist:
-                return Response({"error": "Id provided by u does not exist."},
+                return Response({"error": "Id provided by ypu does not exist."},
                                 status=status.HTTP_400_BAD_REQUEST)
         else:
             order = Order.objects.filter(product__user=user)
