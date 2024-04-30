@@ -1,17 +1,19 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+
 from .models import Product
 from .serializers import Productserializer
+
 from user.decorators import is_seller
 
 
 class Createproduct(APIView):
     permission_classes = [IsAuthenticated]
+
     @is_seller
-    def post(self,request):
+    def post(self, request):
         user_id = request.user.id
         serializer = Productserializer(data=request.data)
         if serializer.is_valid():
@@ -23,32 +25,35 @@ class Createproduct(APIView):
                     status=status.HTTP_202_ACCEPTED)
             except Product.DoesNotExist:
                 serializer.save(user_id=user_id)
-        return Response({"message":"The product is added"}, status=status.HTTP_201_CREATED)
-    
+        return Response({"message": "The product is added"}, status=status.HTTP_201_CREATED)
+ 
 
 class Manageproduct(APIView):
     permission_classes = [IsAuthenticated]
+
     @is_seller
-    def patch(self,request,id):
-        user = request.user
+    def patch(self, request, id):
+        user_id = request.user.id
         try:
-            product = Product.objects.get(user_id=request.user.id, id=id)
+            product = Product.objects.get(user_id=user_id, id=id)
         except Product.DoesNotExist:
-            return Response({"error":"The product you are giving input is not added by you. You cannot update its detail."})
+            return Response({"error": "The product you are giving input is not added by you. You cannot update its detail."},
+                            status=status.HTTP_400_BAD_REQUEST)
         serializer = Productserializer(product, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-        return Response({"message":"The details are updated."}, status=status.HTTP_202_ACCEPTED)
+        return Response({"message": "The details are updated."}, status=status.HTTP_202_ACCEPTED)
     
-            
-    def delete(self,request,id):
+    @is_seller       
+    def delete(self, request, id):
         user = request.user
         try:
-            product = Product.objects.get(user_id=request.user.id, id=id)
+            product = Product.objects.get(user=user, id=id)
         except Product.DoesNotExist:
-            return Response({"error":"The prroduct you are giving input is not added by you. You cannot delete it."})
+            return Response({"error": "The prroduct you are giving input is not added by you. You cannot delete it."},
+                            status=status.HTTP_400_BAD_REQUEST)
         product.delete()
-        return Response({"message":"The product is deleted."})
+        return Response({"message": "The product is deleted."}, status=status.HTTP_200_OK)
     
 
 class Readproduct(APIView):
@@ -57,13 +62,14 @@ class Readproduct(APIView):
             try:
                 product = Product.objects.get(id=id)
                 serializer = Productserializer(product)
-                return Response(serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             except Product.DoesNotExist:
-                return Response({"error":"Id provided by u does not exist."})
+                return Response({"error": "Id provided by you does not exist."},
+                                status=status.HTTP_400_BAD_REQUEST)
         else:
             product = Product.objects.all()
             serializer = Productserializer(product, many=True)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
                 
 
         
